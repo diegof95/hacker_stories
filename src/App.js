@@ -21,10 +21,13 @@ function App(props){
     },
   ];
   
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(
+    localStorage.getItem('search') || ''
+  )
   
   const handleChange = (event) => {
     setSearchTerm(event.target.value)
+    
   }
   
   const filterBySearch = (search) => (
@@ -34,11 +37,18 @@ function App(props){
       )
     )
   )
-
+  
+  const enterSearch = (event) => {
+    if(event.key == 'Enter'){
+      setSearchTerm(event.target.value)
+      localStorage.setItem('search', event.target.value)
+    }
+  }
+  
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      <Search value={searchTerm} handleChange={handleChange}/>
+      <Search value={searchTerm} handleChange={handleChange} enterSearch={enterSearch}/>
       <hr />
       <List list={ filterBySearch(searchTerm) }/>
     </div>
@@ -54,6 +64,7 @@ function Search(props){
       type="text"
       value={props.value}
       onChange={props.handleChange}
+      onKeyPress={props.enterSearch}
     />
     </>
   )
