@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './App.css'
 
 function App(props){
@@ -23,6 +23,13 @@ function App(props){
   
   const [searchTerm, setSearchTerm] = useState(
     localStorage.getItem('search') || ''
+  )
+  
+  useEffect(
+    () => {
+      localStorage.setItem('search', searchTerm);
+    },
+    [searchTerm]
   )
   
   const handleChange = (event) => {
