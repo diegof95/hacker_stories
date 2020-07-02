@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useReducer } from 'react'
 import './App.css'
 import data from './data'
 
@@ -17,6 +17,19 @@ function useTempStorage(key) {
   return [value, setValue]
 }
 
+function storiesReducer(state, action){
+  switch (action.type) {
+    case 'SET_STORIES':
+      return action.payload;
+    case 'REMOVE_STORY':
+      return state.filter(
+        story => action.payload.objectID !== story.objectID
+      )
+    default:
+      throw new Error();
+  }
+}
+
 function getStories() {
   return(
     new Promise((resolve, reject) => (
@@ -30,7 +43,10 @@ function getStories() {
 function App(props){
   
   const [searchTerm, setSearchTerm] = useTempStorage('searchTerm')
-  const [stories, setStories] = useState([])
+  const [stories, dispatchStories] = useReducer(
+      storiesReducer,
+      []
+    )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -38,7 +54,12 @@ function App(props){
     () => {
       getStories()
         .then((result) => {
-          setStories(result.stories);
+          dispatchStories(
+            {
+              type: 'SET_STORIES',
+              payload: result.stories
+            }
+          )
           setLoading(false)
         })
         .catch(() => {
@@ -62,11 +83,12 @@ function App(props){
   }
 
   const handleRemove = (toDelete) => {
-    setStories((prevStories) => (
-      prevStories.filter(
-        (item) => (item.objectID != toDelete.objectID)
-      )
-    ))
+    dispatchStories(
+      {
+        type: 'REMOVE_STORY',
+        payload: { objectID: toDelete.objectID}
+      }
+    )
   }
   
   return (
