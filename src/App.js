@@ -17,22 +17,49 @@ function useTempStorage(key) {
   return [value, setValue]
 }
 
+function getStories() {
+  return(
+    new Promise((resolve, reject) => (
+      setTimeout(
+        () => resolve({stories: data}),
+        2000
+      )))
+  )
+}
+
 function App(props){
   
-  const[searchTerm, setSearchTerm] = useTempStorage('searchTerm')
-  const[stories, setStories] = useState(data)
-  
-  const handleChange = (event) => {
-    setSearchTerm(event.target.value)
-  }
-  
-  const filterBySearch = (search) => (
+  const [searchTerm, setSearchTerm] = useTempStorage('searchTerm')
+  const [stories, setStories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(
+    () => {
+      getStories()
+        .then((result) => {
+          setStories(result.stories);
+          setLoading(false)
+        })
+        .catch(() => {
+          setError(true)
+          setLoading(false)
+        })
+    },
+    []
+  )
+
+  const filterBySearch = (searchTerm) => (
     stories.filter(
       (item) => (
         item.title.toLowerCase().includes(searchTerm.toLowerCase())
       )
     )
   )
+
+  const handleChange = (event) => {
+    setSearchTerm(event.target.value)
+  }
 
   const handleRemove = (toDelete) => {
     setStories((prevStories) => (
@@ -41,17 +68,6 @@ function App(props){
       )
     ))
   }
-
-  /* Time complexity, linear too but more operations
-  const handleRemove = (toDelete) => {
-    setStories((prevStories) => {
-        const index = prevStories.indexOf(toDelete)
-        return ([
-          ...prevStories.slice(0, index),
-          ...prevStories.slice(index + 1)
-        ])
-    })
-  }*/
   
   return (
     <div>
@@ -60,20 +76,28 @@ function App(props){
         id="search"
         label="Search"
         value={searchTerm}
-        handler={handleChange} />
+        handler={handleChange}
+      >
+        Search: 
+      </LabeledInput>
       <hr />
-      <List
-        list={ filterBySearch(searchTerm) }
-        handleRemove={handleRemove}
-      />
+      { error && <p>Something went wrong loading data...</p> }
+      { loading ?
+        <p>Loading data...</p>
+        :
+        <List
+          list={ filterBySearch(searchTerm) }
+          handleRemove={handleRemove}
+        />
+      }
     </div>
   )
 }
 
-function LabeledInput({id, label, type="text", value, handler}){
+function LabeledInput({id, label, type="text", value, handler, children}){
   return(
     <>
-    <label htmlFor={id}>{label}: </label>
+    <label htmlFor={id}>{children}</label>
     <input
       id={id}
       type={type}
@@ -85,8 +109,6 @@ function LabeledInput({id, label, type="text", value, handler}){
 }
 
 function List(props){
-
-
 
  return(
     props.list.map( (item) => (
