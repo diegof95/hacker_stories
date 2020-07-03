@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useReducer } from 'react'
 import './App.css'
-import data from './data'
+
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
 
 function useTempStorage(key) {
   const [value, setValue] = useState(
@@ -19,24 +20,39 @@ function useTempStorage(key) {
 
 function storiesReducer(state, action){
   switch (action.type) {
-    case 'SET_STORIES':
-      return action.payload;
+    case 'STORIES_FETCH_INIT':
+      return {
+        ...state,
+        loading: true,
+      }
+    case 'STORIES_FETCH_SUCCESS':
+      return {
+        ...state,
+        data: action.payload,
+        loading: false,
+      }
+    case 'STORIES_FETCH_ERROR':
+      return {
+        ...state,
+        error: true,
+        loading: false
+      }
     case 'REMOVE_STORY':
-      return state.filter(
-        story => action.payload.objectID !== story.objectID
-      )
+      return {
+        ...state,
+        data: state.data.filter(
+          (story) => (action.payload.objectID !== story.objectID)
+        )
+      }
     default:
       throw new Error();
   }
 }
 
+// Just fetching and returning promise
 function getStories() {
   return(
-    new Promise((resolve, reject) => (
-      setTimeout(
-        () => resolve({stories: data}),
-        2000
-      )))
+    fetch(`${API_ENDPOINT}react`)
   )
 }
 
@@ -45,35 +61,40 @@ function App(props){
   const [searchTerm, setSearchTerm] = useTempStorage('searchTerm')
   const [stories, dispatchStories] = useReducer(
       storiesReducer,
-      []
+      {
+        data: [],
+        loading: false,
+        error: false
+      }
+      // stories now is an object that encasulates info about loading or error in stories fetching
     )
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
 
+  // Initial data fetching
   useEffect(
     () => {
+      dispatchStories({type: 'STORIES_FETCH_INIT'})
+
       getStories()
-        .then((result) => {
-          dispatchStories(
-            {
-              type: 'SET_STORIES',
-              payload: result.stories
-            }
-          )
-          setLoading(false)
-        })
-        .catch(() => {
-          setError(true)
-          setLoading(false)
-        })
+        .then((response) => (
+          response.json()
+        ))
+        .then((result) => (
+          dispatchStories({
+            type: 'STORIES_FETCH_SUCCESS',
+            payload: result.hits,
+          })
+        ))
+        .catch(() => (
+          dispatchStories({type: 'STORIES_FETCH_ERROR'})
+        ))
     },
     []
   )
 
-  const filterBySearch = (searchTerm) => (
-    stories.filter(
+  const filterBySearch = (search) => (
+    stories.data.filter(
       (item) => (
-        item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        item.title.toLowerCase().includes(search.toLowerCase())
       )
     )
   )
@@ -96,15 +117,14 @@ function App(props){
       <h1>My Hacker Stories</h1>
       <LabeledInput
         id="search"
-        label="Search"
         value={searchTerm}
         handler={handleChange}
       >
         Search: 
       </LabeledInput>
       <hr />
-      { error && <p>Something went wrong loading data...</p> }
-      { loading ?
+      { stories.error && <p>Something went wrong loading data...</p> }
+      { stories.loading ?
         <p>Loading data...</p>
         :
         <List
@@ -116,7 +136,7 @@ function App(props){
   )
 }
 
-function LabeledInput({id, label, type="text", value, handler, children}){
+function LabeledInput({id, type="text", value, handler, children}){
   return(
     <>
     <label htmlFor={id}>{children}</label>
