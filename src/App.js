@@ -50,9 +50,9 @@ function storiesReducer(state, action){
 }
 
 // Just fetching and returning promise
-function getStories() {
+function getStories(searchTerm) {
   return(
-    fetch(`${API_ENDPOINT}react`)
+    fetch(`${API_ENDPOINT}${searchTerm}`)
   )
 }
 
@@ -69,12 +69,21 @@ function App(props){
       // stories now is an object that encasulates info about loading or error in stories fetching
     )
 
-  // Initial data fetching
+  // Data fetching
   useEffect(
     () => {
+      // Empty search term doesn't fetch and cleans results
+      if(searchTerm.trim() === ''){
+        dispatchStories({
+          type: 'STORIES_FETCH_SUCCESS',
+          payload: []
+        })
+        return
+      }
+
       dispatchStories({type: 'STORIES_FETCH_INIT'})
 
-      getStories()
+      getStories(searchTerm)
         .then((response) => (
           response.json()
         ))
@@ -88,15 +97,7 @@ function App(props){
           dispatchStories({type: 'STORIES_FETCH_ERROR'})
         ))
     },
-    []
-  )
-
-  const filterBySearch = (search) => (
-    stories.data.filter(
-      (item) => (
-        item.title.toLowerCase().includes(search.toLowerCase())
-      )
-    )
+    [searchTerm]
   )
 
   const handleChange = (event) => {
@@ -128,7 +129,7 @@ function App(props){
         <p>Loading data...</p>
         :
         <List
-          list={ filterBySearch(searchTerm) }
+          list={ stories.data }
           handleRemove={handleRemove}
         />
       }
