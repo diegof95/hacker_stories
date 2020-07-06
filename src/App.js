@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from 'react'
+import React, { useState, useEffect, useReducer, useCallback } from 'react'
 import './App.css'
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
@@ -49,13 +49,6 @@ function storiesReducer(state, action){
   }
 }
 
-// Just fetching and returning promise
-function getStories(searchTerm) {
-  return(
-    fetch(`${API_ENDPOINT}${searchTerm}`)
-  )
-}
-
 function App(props){
   
   const [searchTerm, setSearchTerm] = useTempStorage('searchTerm')
@@ -69,8 +62,8 @@ function App(props){
       // stories now is an object that encasulates info about loading or error in stories fetching
     )
 
-  // Data fetching
-  useEffect(
+  // Data fetching. Using useCallback to return memoized function
+  const getStories = useCallback(
     () => {
       // Empty search term doesn't fetch and cleans results
       if(searchTerm.trim() === ''){
@@ -80,10 +73,10 @@ function App(props){
         })
         return
       }
-
+      
       dispatchStories({type: 'STORIES_FETCH_INIT'})
 
-      getStories(searchTerm)
+      fetch(`${API_ENDPOINT}${searchTerm}`)
         .then((response) => (
           response.json()
         ))
@@ -98,6 +91,11 @@ function App(props){
         ))
     },
     [searchTerm]
+  )
+  
+  useEffect(
+    getStories,
+    [getStories]
   )
 
   const handleChange = (event) => {
