@@ -24,12 +24,14 @@ function storiesReducer(state, action){
       return {
         ...state,
         loading: true,
+        error: false
       }
     case 'STORIES_FETCH_SUCCESS':
       return {
         ...state,
         data: action.payload,
         loading: false,
+        error: false
       }
     case 'STORIES_FETCH_ERROR':
       return {
@@ -52,6 +54,7 @@ function storiesReducer(state, action){
 function App(props){
   
   const [searchTerm, setSearchTerm] = useTempStorage('searchTerm')
+  const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`)
   const [stories, dispatchStories] = useReducer(
       storiesReducer,
       {
@@ -63,8 +66,7 @@ function App(props){
     )
 
   // Data fetching. Using useCallback to return memoized function
-  const getStories = useCallback(
-    () => {
+  const getStories = useCallback(() => {
       // Empty search term doesn't fetch and cleans results
       if(searchTerm.trim() === ''){
         dispatchStories({
@@ -76,7 +78,7 @@ function App(props){
       
       dispatchStories({type: 'STORIES_FETCH_INIT'})
 
-      fetch(`${API_ENDPOINT}${searchTerm}`)
+      fetch(url)
         .then((response) => (
           response.json()
         ))
@@ -90,7 +92,7 @@ function App(props){
           dispatchStories({type: 'STORIES_FETCH_ERROR'})
         ))
     },
-    [searchTerm]
+    [url]
   )
   
   useEffect(
@@ -100,6 +102,11 @@ function App(props){
 
   const handleChange = (event) => {
     setSearchTerm(event.target.value)
+  }
+
+  const handleSearch = (event) => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`)
+    event.preventDefault()
   }
 
   const handleRemove = (toDelete) => {
@@ -114,13 +121,18 @@ function App(props){
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      <LabeledInput
-        id="search"
-        value={searchTerm}
-        handler={handleChange}
-      >
-        Search: 
-      </LabeledInput>
+      <form onSubmit={handleSearch}>
+        <LabeledInput
+          id="search"
+          value={searchTerm}
+          handler={handleChange}
+        >
+          Search: 
+        </LabeledInput>
+        <button type="submit">
+          Go
+        </button>
+      </form>
       <hr />
       { stories.error && <p>Something went wrong loading data...</p> }
       { stories.loading ?
