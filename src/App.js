@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useReducer, useCallback } from 'react'
 import axios from 'axios'
 import './App.css'
+import 'regenerator-runtime/runtime' // Temp fix to: ReferenceError: regeneratorRuntime is not defined
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
 
@@ -67,6 +68,8 @@ function App(props){
 
   // Data fetching. Using useCallback to return memoized function
   const getStories = useCallback(() => {
+    // React warns about using asyn funct with a effect funct liike useCallback
+    const fetch_data = async () => {
       // Empty search term doesn't fetch and cleans results
       if(searchTerm.trim() === ''){
         dispatchStories({
@@ -78,18 +81,22 @@ function App(props){
       
       dispatchStories({type: 'STORIES_FETCH_INIT'})
 
-      axios.get(url)
-        .then((result) => (
-          dispatchStories({
-            type: 'STORIES_FETCH_SUCCESS',
-            payload: result.data.hits,
-          })
-        ))
-        .catch(() => (
-          dispatchStories({type: 'STORIES_FETCH_ERROR'})
-        ))
-    },
-    [url]
+      const result = await axios.get(url)
+
+      try {
+        dispatchStories({
+          type: 'STORIES_FETCH_SUCCESS',
+          payload: result.data.hits,
+        })
+      }
+      catch {
+        dispatchStories({type: 'STORIES_FETCH_ERROR'})
+      }
+    }
+
+    fetch_data()
+  },
+  [url]
   )
   
   useEffect(
