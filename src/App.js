@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useReducer, useCallback } from 'react'
+import axios from 'axios'
 import './App.css'
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
@@ -62,7 +63,6 @@ function App(props){
         loading: false,
         error: false
       }
-      // stories now is an object that encasulates info about loading or error in stories fetching
     )
 
   // Data fetching. Using useCallback to return memoized function
@@ -78,14 +78,11 @@ function App(props){
       
       dispatchStories({type: 'STORIES_FETCH_INIT'})
 
-      fetch(url)
-        .then((response) => (
-          response.json()
-        ))
+      axios.get(url)
         .then((result) => (
           dispatchStories({
             type: 'STORIES_FETCH_SUCCESS',
-            payload: result.hits,
+            payload: result.data.hits,
           })
         ))
         .catch(() => (
@@ -140,7 +137,7 @@ function App(props){
         :
         <List
           list={ stories.data }
-          handleRemove={handleRemove}
+          handleRemove={ handleRemove }
         />
       }
     </div>
