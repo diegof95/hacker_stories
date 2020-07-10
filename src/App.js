@@ -68,7 +68,8 @@ function App(props){
 
   // Data fetching. Using useCallback to return memoized function
   const getStories = useCallback(() => {
-    // React warns about using asyn funct with a effect funct liike useCallback
+    // React warns about using async funct with a effect funct on useEffect
+    // Since useCallback returns the funct that useEffect uses, we work around it
     const fetch_data = async () => {
       // Empty search term doesn't fetch and cleans results
       if(searchTerm.trim() === ''){
@@ -123,9 +124,9 @@ function App(props){
   }
   
   return (
-    <div>
-      <h1>My Hacker Stories</h1>
-      <form onSubmit={handleSearch}>
+    <div className="container">
+      <h1 className="title">My Hacker Stories</h1>
+      <form className="" onSubmit={handleSearch}>
         <LabeledInput
           id="search"
           value={searchTerm}
@@ -133,7 +134,7 @@ function App(props){
         >
           Search: 
         </LabeledInput>
-        <button type="submit">
+        <button className="button button-large" type="submit">
           Go
         </button>
       </form>
@@ -154,9 +155,10 @@ function App(props){
 function LabeledInput({id, type="text", value, handler, children}){
   return(
     <>
-    <label htmlFor={id}>{children}</label>
+    <label htmlFor={id} className="label">{children}</label>
     <input
       id={id}
+      className="input"
       type={type}
       value={value}
       onChange={handler}
@@ -169,15 +171,16 @@ function List(props){
 
  return(
     props.list.map( (item) => (
-      <div key={item.objectID}>
-        <span>
+      <div key={item.objectID} className="item">
+        <span style={{width: '40%'}}>
           <a href={item.url}>{item.title}</a>
         </span>
-        <span>{item.author}</span>
-        <span>{item.num_comments}</span>
-        <span>{item.points}</span>
-        <span>
+        <span style={{width: '30%'}}>{item.author}</span>
+        <span style={{width: '10%'}}>{item.num_comments}</span>
+        <span style={{width: '10%'}}>{item.points}</span>
+        <span style={{width: '10%'}}>
           <button
+            className="button button-small"
             type="button"
             onClick={() => (props.handleRemove(item))}>
             {/*inline handler */}
