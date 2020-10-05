@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useReducer, useCallback } from 'react'
 import axios from 'axios'
 import './App.css'
+import CheckLogo from './check.svg'
 import 'regenerator-runtime/runtime' // Temp fix to: ReferenceError: regeneratorRuntime is not defined
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
@@ -184,7 +185,7 @@ function List(props){
             type="button"
             onClick={() => (props.handleRemove(item))}>
             {/*inline handler */}
-              Dismiss
+              <CheckLogo height="18px" width="18px"/>
           </button>
       </span>
       </div>

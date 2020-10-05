@@ -58,6 +58,11 @@ body {
   padding: 10px;
 }
 
+.button:hover > svg {
+  fill: #ffffff;
+  stroke: #ffffff;
+}
+
 .search-form {
   padding: 10px 0 20px 0;
   display: flex;
