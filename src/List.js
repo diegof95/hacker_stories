@@ -1,31 +1,47 @@
 import React from 'react';
 import CheckLogo from './check.svg'
+import {sortBy} from 'lodash'
 import './styles.css'
 
-const List = (props) => {
+const SORTS = {
+  NONE: (list) => list,
+  TITLE: (list) => sortBy(list, 'title'),
+  AUTHOR: (list) => sortBy(list, 'author'),
+  COMMENT: (list) => sortBy(list, 'num_comments').reverse(),
+  POINT: (list) => sortBy(list, 'points').reverse(),
+};
+
+const List = ({list, handleRemove}) => {
   
-  const [sort, setSort] = React.useState('title');
+  const [sort, setSort] = React.useState('NONE');
+
+  const handleSort = (value) => {
+    setSort(value);
+  }
+
+  const sortFunction = SORTS[sort];
+  const sortedList = sortFunction(list);
 
   return(
     <>
     <div className="header">
       <button style={{width: '40%'}}
-      
+        onClick={() => handleSort('TITLE')}
       >
         Article
       </button>
       <button style={{width: '30%'}}
-      
+        onClick={() => handleSort('AUTHOR')}
       >
         Author
       </button>
       <button style={{width: '10%'}}
-      
+        onClick={() => handleSort('COMMENT')}
       >
         Comments
       </button>
       <button style={{width: '10%'}}
-        
+        onClick={() => handleSort('POINT')}
       >
         Points
       </button>
@@ -33,11 +49,11 @@ const List = (props) => {
         Checked
       </span>
     </div>
-    { props.list.map( (item) => (
+    { sortedList.map( (item) => (
         <Item
           key={item.objectID}
           item={item}
-          handleRemove={props.handleRemove}
+          handleRemove={handleRemove}
         />
       ))
     }
