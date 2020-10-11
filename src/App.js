@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useReducer, useCallback, useRef, memo } from 'react'
 import axios from 'axios'
 import './App.css'
 import CheckLogo from './check.svg'
@@ -15,7 +15,6 @@ function useTempStorage(key) {
     () => {
       // Using the ref.current we avoid local storage setting in mounting render
       if(isMounted.current){
-        console.log(`Not first render. Local storage setting`);
         localStorage.setItem(key, value);
       }else{
         isMounted.current = true;
@@ -61,7 +60,7 @@ function storiesReducer(state, action){
 }
 
 function App(props){
-  
+  console.log('App render')
   const [searchTerm, setSearchTerm] = useTempStorage('searchTerm')
   const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`)
   const [stories, dispatchStories] = useReducer(
@@ -121,14 +120,18 @@ function App(props){
     event.preventDefault()
   }
 
-  const handleRemove = (toDelete) => {
+  // Use callback to ensure it remains equal when passed
+  // as prop to memo List
+  const handleRemove = useCallback((toDelete) => {
     dispatchStories(
       {
         type: 'REMOVE_STORY',
         payload: { objectID: toDelete.objectID}
       }
     )
-  }
+  }, 
+  []
+  )
   
   return (
     <div className="container">
@@ -174,9 +177,10 @@ function LabeledInput({id, type="text", value, handler, children}){
   )
 }
 
-function List(props){
-
- return(
+// memo: only re render if props change
+const List = memo((props) =>
+  console.log('List render') ||
+  (
     props.list.map( (item) => (
      <Item
         key={item.objectID}
@@ -184,8 +188,8 @@ function List(props){
         handleRemove={props.handleRemove}
       />
     ))
-  );
-}
+  )
+);
 
 function Item({item, handleRemove}){
   return(
