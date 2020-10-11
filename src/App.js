@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useCallback, useRef, memo } from 'react'
+import React, { useState, useEffect, useReducer, useCallback, useRef, memo, useMemo } from 'react'
 import axios from 'axios'
 import './App.css'
 import CheckLogo from './check.svg'
@@ -58,6 +58,14 @@ function storiesReducer(state, action){
       throw new Error();
   }
 }
+
+const getSumComments = stories => {
+  console.log('sum')
+  return stories.data.reduce(
+    (result, value) => (result + value.num_comments),
+    0
+  );
+};
 
 function App(props){
   console.log('App render')
@@ -131,11 +139,16 @@ function App(props){
     )
   }, 
   []
-  )
+  );
   
+  const sumComments = useMemo(() => 
+    getSumComments(stories),
+    [stories]
+  );
+
   return (
     <div className="container">
-      <h1 className="title">My Hacker Stories</h1>
+      <h1 className="title">My Hacker Stories with {sumComments} comments.</h1>
       <form className="" onSubmit={handleSearch}>
         <LabeledInput
           id="search"
@@ -179,7 +192,6 @@ function LabeledInput({id, type="text", value, handler, children}){
 
 // memo: only re render if props change
 const List = memo((props) =>
-  console.log('List render') ||
   (
     props.list.map( (item) => (
      <Item
