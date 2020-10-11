@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useCallback } from 'react'
+import React, { useState, useEffect, useReducer, useCallback, useRef } from 'react'
 import axios from 'axios'
 import './App.css'
 import CheckLogo from './check.svg'
@@ -10,10 +10,16 @@ function useTempStorage(key) {
   const [value, setValue] = useState(
     localStorage.getItem(key) || ''
   )
-  
+  const isMounted = useRef(false);
   useEffect(
     () => {
-      localStorage.setItem(key, value);
+      // Using the ref.current we avoid local storage setting in mounting render
+      if(isMounted.current){
+        console.log(`Not first render. Local storage setting`);
+        localStorage.setItem(key, value);
+      }else{
+        isMounted.current = true;
+      };
     },
     [value, key]
   )
@@ -172,25 +178,35 @@ function List(props){
 
  return(
     props.list.map( (item) => (
-      <div key={item.objectID} className="item">
-        <span style={{width: '40%'}}>
-          <a href={item.url}>{item.title}</a>
-        </span>
-        <span style={{width: '30%'}}>{item.author}</span>
-        <span style={{width: '10%'}}>{item.num_comments}</span>
-        <span style={{width: '10%'}}>{item.points}</span>
-        <span style={{width: '10%'}}>
-          <button
-            className="button button-small"
-            type="button"
-            onClick={() => (props.handleRemove(item))}>
-            {/*inline handler */}
-              <CheckLogo height="18px" width="18px"/>
-          </button>
-      </span>
-      </div>
+     <Item
+        key={item.objectID}
+        item={item}
+        handleRemove={props.handleRemove}
+      />
     ))
-  )
+  );
+}
+
+function Item({item, handleRemove}){
+  return(
+    <div className="item">
+      <span style={{width: '40%'}}>
+        <a href={item.url}>{item.title}</a>
+      </span>
+      <span style={{width: '30%'}}>{item.author}</span>
+      <span style={{width: '10%'}}>{item.num_comments}</span>
+      <span style={{width: '10%'}}>{item.points}</span>
+      <span style={{width: '10%'}}>
+        <button
+          className="button button-small"
+          type="button"
+          onClick={() => (handleRemove(item))}>
+          {/*inline handler */}
+            <CheckLogo height="18px" width="18px"/>
+        </button>
+      </span>
+    </div>
+  );
 }
 
 export default App
