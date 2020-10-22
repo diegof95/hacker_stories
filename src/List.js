@@ -13,14 +13,22 @@ const SORTS = {
 
 const List = ({list, handleRemove}) => {
   
-  const [sort, setSort] = React.useState('NONE');
+  const [sort, setSort] = React.useState({
+    sortKey: 'NONE',
+    reversed: false
+  });
 
-  const handleSort = (value) => {
-    setSort(value);
+  const handleSort = (sortKey) => {
+    
+    const reversed = (sort.sortKey == sortKey) && !sort.reversed;
+    setSort({sortKey, reversed});
   }
 
-  const sortFunction = SORTS[sort];
-  const sortedList = sortFunction(list);
+  const sortFunction = SORTS[sort.sortKey];
+  const sortedList = sort.reversed ?
+      sortFunction(list).reverse()
+    :
+      sortFunction(list);
 
   return(
     <>
